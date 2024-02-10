@@ -1,215 +1,70 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8" />
-		<title>TidalWaves.Tech</title>
-		<meta
-			name="viewport"
-			content="initial-scale=1,maximum-scale=1,user-scalable=no"
-		/>
-		<link
-			href="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css"
-			rel="stylesheet"
-		/>
-		<script src="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.js"></script>
-		<style>
-			body,
-			html {
-				margin: 0;
-				padding: 0;
-				overflow-x: hidden;
-				height: 100%;
-			}
-			.header-banner {
-				background-color: black;
-				color: white;
-				padding: 10px;
-				text-align: center;
-				position: fixed;
-				top: 0;
-				width: 100%;
-				z-index: 2;
-			}
-			#mapContainer {
-				position: relative;
-				width: 200%;
-				height: 100%;
-			}
-			#map1,
-			#map2 {
-				position: absolute;
-				top: 80px;
-				bottom: 0;
-				width: 50%;
-				height: calc(100% - 80px);
-			}
-			#map1 {
-				left: 0;
-			}
-			#map2 {
-				right: 0;
-				display: none;
-			} /* Initially hide the second map */
-			.scroll-btn {
-				position: fixed;
-				top: 50%;
-				transform: translateY(-50%);
-				z-index: 10;
-				background-color: #000;
-				color: #fff;
-				border: none;
-				cursor: pointer;
-				padding: 10px;
-			}
-			#scrollLeft {
-				left: 10px;
-				display: none;
-			} /* Initially hide the left scroll button */
-			#scrollRight {
-				right: 10px;
-			}
-		</style>
-	</head>
-	<body>
-		<div class="header-banner">
-			<h1>Project Tidal</h1>
-		</div>
-		<div id="mapContainer">
-			<div id="map1"></div>
-			<div id="map2"></div>
-		</div>
-		<button id="scrollLeft" class="scroll-btn">←</button>
-		<button id="scrollRight" class="scroll-btn">→</button>
+<head>
+    <meta charset="utf-8">
+    <title>TidalWaves.Tech Navigation</title>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+        }
+        .iframe-container {
+            width: 200vw; /* 2x the viewport width to accommodate both maps */
+            height: 100%;
+            display: flex;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100vw; /* 100% of the viewport width */
+            height: 100%;
+            border: none;
+        }
+        .scroll-btn {
+            position: fixed;
+            top: 50%;
+            z-index: 10;
+            background-color: #000;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            transform: translateY(-50%);
+        }
+        #scrollRight {
+            right: 10px;
+        }
+        #scrollLeft {
+            left: 10px;
+            display: none; /* Initially hide the left scroll button */
+        }
+    </style>
+</head>
+<body>
 
-		<script>
-			mapboxgl.accessToken =
-				"pk.eyJ1IjoicmNoYWRoYTMzIiwiYSI6ImNsb296ZHB6ejAydjIyanB0em5tb2tlN3UifQ.3O7_wv9OO6UJQ_DO9cm1yw";
+<div class="iframe-container" id="iframeContainer">
+    <iframe src="Map1.html" id="map1Frame"></iframe>
+    <iframe src="Map2.html" id="map2Frame"></iframe>
+</div>
 
-			let map1Loaded = false,
-				map2Loaded = false;
+<button id="scrollRight" class="scroll-btn">→</button>
+<button id="scrollLeft" class="scroll-btn">←</button>
 
-			function initializeMap1() {
-				const map1 = new mapboxgl.Map({
-					container: "map1",
-					style: "mapbox://styles/mapbox/satellite-streets-v11",
-					zoom: 1.5,
-					center: [30, 50],
-					projection: "globe",
-				});
+<script>
+    document.getElementById('scrollRight').onclick = function() {
+        document.getElementById('iframeContainer').scrollBy({ left: window.innerWidth, behavior: 'smooth' });
+        this.style.display = 'none'; // Hide the right scroll button
+        document.getElementById('scrollLeft').style.display = 'block'; // Show the left scroll button
+    };
 
-				map1.on("load", () => {
-					map1.setFog({});
-					map1Loaded = true;
-				});
-			}
+    document.getElementById('scrollLeft').onclick = function() {
+        document.getElementById('iframeContainer').scrollBy({ left: -window.innerWidth, behavior: 'smooth' });
+        this.style.display = 'none'; // Hide the left scroll button
+        document.getElementById('scrollRight').style.display = 'block'; // Show the right scroll button
+    };
+</script>
 
-			function initializeMap2() {
-				const map2 = new mapboxgl.Map({
-					container: "map2",
-					center: [0, 0],
-					zoom: 2,
-					style: "mapbox://styles/mapbox/streets-v12",
-				});
-
-				const size = 200;
-				const pulsingDot = {
-					width: size,
-					height: size,
-					data: new Uint8Array(size * size * 4),
-
-					// When the layer is added to the map,
-					// get the rendering context for the map canvas.
-					onAdd: function () {
-						const canvas = document.createElement("canvas");
-						canvas.width = this.width;
-						canvas.height = this.height;
-						this.context = canvas.getContext("2d");
-					},
-
-					// Call once before every frame where the icon will be used.
-					render: function () {
-						const duration = 1000;
-						const t = (performance.now() % duration) / duration;
-
-						const radius = (size / 2) * 0.3;
-						const outerRadius = (size / 2) * 0.7 * t + radius;
-						const context = this.context;
-
-						// Draw the outer circle.
-						context.clearRect(0, 0, this.width, this.height);
-						context.beginPath();
-						context.arc(
-							this.width / 2,
-							this.height / 2,
-							outerRadius,
-							0,
-							Math.PI * 2
-						);
-						context.fillStyle = `rgba(255, 200, 200, ${1 - t})`;
-						context.fill();
-
-						// Draw the inner circle.
-						context.beginPath();
-						context.arc(
-							this.width / 2,
-							this.height / 2,
-							radius,
-							0,
-							Math.PI * 2
-						);
-						context.fillStyle = "rgba(255, 100, 100, 1)";
-						context.strokeStyle = "white";
-						context.lineWidth = 2 + 4 * (1 - t);
-						context.fill();
-						context.stroke();
-
-						// Update this image's data with data from the canvas.
-						this.data = context.getImageData(
-							0,
-							0,
-							this.width,
-							this.height
-						).data;
-
-						// Continuously repaint the map, resulting
-						// in the smooth animation of the dot.
-						map.triggerRepaint();
-
-						// Return `true` to let the map know that the image was updated.
-						return true;
-					},
-				};
-
-				map2.on("load", () => {
-					map2.addImage("pulsing-dot", pulsingDot, { pixelRatio: 2 });
-					map2.addSource("dot-point", {
-						/* Dot Point implementation */
-					});
-					map2.addLayer({
-						/* Layer implementation */
-					});
-					map2Loaded = true;
-				});
-			}
-
-			document.getElementById("scrollRight").addEventListener("click", () => {
-				if (!map2Loaded) {
-					initializeMap2();
-				}
-				document.getElementById("map2").style.display = "block";
-				document.getElementById("scrollRight").style.display = "none";
-				document.getElementById("scrollLeft").style.display = "block";
-				window.scrollTo({ left: window.innerWidth, behavior: "smooth" });
-			});
-
-			document.getElementById("scrollLeft").addEventListener("click", () => {
-				document.getElementById("scrollLeft").style.display = "none";
-				document.getElementById("scrollRight").style.display = "block";
-				window.scrollTo({ left: 0, behavior: "smooth" });
-			});
-
-			initializeMap1();
-            initializeMap2();
-		</script>
-	</body>
+</body>
 </html>
