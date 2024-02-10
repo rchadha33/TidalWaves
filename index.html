@@ -1,38 +1,69 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>TidalWaves.Tech</title>
-<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
-<link href="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css" rel="stylesheet">
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.js"></script>
-<style>
-body { margin: 0; padding: 0; }
-.header-banner { background-color: black; color: white; padding: 10px; text-align: center; }
-#map { position: absolute; top: 80px; /* Adjusted top value */ bottom: 0; width: 100%; }
-</style>
+    <meta charset="utf-8">
+    <title>TidalWaves.Tech Navigation</title>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+        }
+        .iframe-container {
+            width: 200vw; /* 2x the viewport width to accommodate both maps */
+            height: 100%;
+            display: flex;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100vw; /* 100% of the viewport width */
+            height: 100%;
+            border: none;
+        }
+        .scroll-btn {
+            position: fixed;
+            top: 50%;
+            z-index: 10;
+            background-color: #000;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            transform: translateY(-50%);
+        }
+        #scrollRight {
+            right: 10px;
+        }
+        #scrollLeft {
+            left: 10px;
+            display: none; /* Initially hide the left scroll button */
+        }
+    </style>
 </head>
 <body>
-<div class="header-banner">
-    <h1>Project Tidal</h1>
+
+<div class="iframe-container" id="iframeContainer">
+    <iframe src="Map1.html" id="map1Frame"></iframe>
+    <iframe src="Map2.html" id="map2Frame"></iframe>
 </div>
-<div id="map"></div>
+
+<button id="scrollRight" class="scroll-btn">→</button>
+<button id="scrollLeft" class="scroll-btn">←</button>
 
 <script>
-	mapboxgl.accessToken = 'pk.eyJ1IjoicmNoYWRoYTMzIiwiYSI6ImNsb296ZHB6ejAydjIyanB0em5tb2tlN3UifQ.3O7_wv9OO6UJQ_DO9cm1yw';
-    const map = new mapboxgl.Map({
-        container: 'map',
-        // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
-        style: 'mapbox://styles/mapbox/satellite-streets-v11',
-        zoom: 1.5,
-        center: [30, 50],
-        projection: 'globe'
-    });
+    document.getElementById('scrollRight').onclick = function() {
+        document.getElementById('iframeContainer').scrollBy({ left: window.innerWidth, behavior: 'smooth' });
+        this.style.display = 'none'; // Hide the right scroll button
+        document.getElementById('scrollLeft').style.display = 'block'; // Show the left scroll button
+    };
 
-    map.on('load', () => {
-        // Set the default atmosphere style
-        map.setFog({});
-    });
+    document.getElementById('scrollLeft').onclick = function() {
+        document.getElementById('iframeContainer').scrollBy({ left: -window.innerWidth, behavior: 'smooth' });
+        this.style.display = 'none'; // Hide the left scroll button
+        document.getElementById('scrollRight').style.display = 'block'; // Show the right scroll button
+    };
 </script>
 
 </body>
