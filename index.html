@@ -6,6 +6,7 @@
 <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css" rel="stylesheet">
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
         body { margin: 0; padding: 0; }
         .header-banner { background-color: black; color: white; padding: 10px; text-align: center; }
@@ -109,6 +110,7 @@ document.getElementById('resetButton').addEventListener('click', function() {
         window.location.reload();
 });
 
+
 	mapboxgl.accessToken = 'pk.eyJ1IjoicmNoYWRoYTMzIiwiYSI6ImNsb296ZHB6ejAydjIyanB0em5tb2tlN3UifQ.3O7_wv9OO6UJQ_DO9cm1yw';
         const map = new mapboxgl.Map({
                 container: 'map',
@@ -147,6 +149,65 @@ document.getElementById('resetButton').addEventListener('click', function() {
                 sizeDiv.style.marginLeft = '18px';
         }
         sizeContainer.appendChild(sizeDiv);
+        // Create a container for the chart
+const chartContainer = document.createElement('div');
+chartContainer.id = 'chartContainer';
+chartContainer.style.display = 'none'; // Start hidden
+document.body.appendChild(chartContainer);
+
+// Prepare a function to create a chart
+function createEnergyCostChart(countryData) {
+    // Assuming 'countryData' is an object with the cost data
+    const ctx = document.getElementById('chartContainer').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'bar', // Choose the chart type: bar, line, etc.
+        data: {
+            labels: Object.keys(countryData), // e.g., ['Oil', 'Natural Gas', 'Coal', ...]
+            datasets: [{
+                label: 'Energy Cost ($)',
+                data: Object.values(countryData), // e.g., [341349601.75, 26981041108.50, ...]
+                backgroundColor: 'rgba(0, 123, 255, 0.5)',
+                borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    return chart;
+}
+
+// Listen for a click on the map to create and show the chart
+map.on('click', 'country-boundaries', (e) => {
+    // Get the country data (you will need to implement the data retrieval)
+    const countryData = getCountryData(e.features[0].properties.name);
+
+    // Create the chart with the country data
+    const chart = createEnergyCostChart(countryData);
+
+    // Show the chart container
+    chartContainer.style.display = 'block';
+});
+
+// Function to hide the chart
+function hideChart() {
+    chartContainer.style.display = 'none';
+    // If you stored your chart instance globally, you should also destroy it
+    if (window.myChart) {
+        window.myChart.destroy();
+    }
+}
+
+// Add an event listener to hide the chart when the map is clicked
+map.on('click', () => {
+    hideChart();
+});
+
 });
 
         legend.appendChild(sizeContainer);
