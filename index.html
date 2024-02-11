@@ -212,6 +212,59 @@ map.on('mouseleave', 'data-driven-circles', function() {
         popup.remove();
 });
 
+function fetchAndUpdateMapLayer() {
+  const publicS3Url = 'https://tidalwaves.s3.us-east-2.amazonaws.com/geojson';
+
+  fetch(publicS3Url)
+    .then(response => response.json())
+    .then(jsonData => {
+      // Check if the source exists
+      if (!map.getSource('data-source-id')) {
+        // If the source doesn't exist, create it
+        map.addSource('data-source-id', {
+          type: 'geojson',
+          data: jsonData
+        });
+      } else {
+        // If the source exists, just update its data
+        map.getSource('data-source-id').setData(jsonData);
+      }
+
+      // Update the first layer with new data
+      if (!map.getLayer('power (1)')) {
+        // If the 'power (1)' layer doesn't exist, create it
+        map.addLayer({
+          id: 'power (1)',
+          type: 'circle', // Assuming it's a circle type, adjust as needed
+          source: 'data-source-id',
+          // Define other layer properties as needed
+        });
+      }
+      
+      // Update the second layer with new data
+      if (!map.getLayer('data-driven-circles')) {
+        // If the 'data-driven-circles' layer doesn't exist, create it
+        map.addLayer({
+          id: 'data-driven-circles',
+          type: 'circle', // Adjust as needed
+          source: 'data-source-id',
+          // Define other layer properties as needed
+        });
+      }
+
+      // Note: No need to "update" the layers if they exist since updating the source's data
+      // will automatically reflect in all layers using that source.
+    })
+    .catch(error => console.error('Error fetching real-time data:', error));
+}
+
+// Fetch and update the layers initially
+fetchAndUpdateMapLayer();
+
+// Set an interval to fetch and update the layers every hour
+setInterval(fetchAndUpdateMapLayer, 3600000);
+
+
 
 });
 </script>
